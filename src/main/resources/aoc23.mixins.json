@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "package": "io.github.ocelot.aoc23.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
