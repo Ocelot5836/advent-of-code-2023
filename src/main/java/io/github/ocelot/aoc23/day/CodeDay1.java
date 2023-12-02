@@ -200,7 +200,7 @@ public class CodeDay1 implements CodeDay {
 
     @Override
     public void addUiElements() {
-        ImGui.inputTextMultiline("Input", this.input);
+        ImGui.inputTextMultiline("Input", this.input, 0, -Float.MIN_VALUE);
     }
 
     @Override

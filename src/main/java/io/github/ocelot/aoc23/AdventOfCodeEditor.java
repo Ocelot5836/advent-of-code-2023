@@ -1,5 +1,6 @@
 package io.github.ocelot.aoc23;
 
+import com.google.common.base.Stopwatch;
 import foundry.veil.editor.SingleWindowEditor;
 import imgui.ImGui;
 import imgui.type.ImBoolean;
@@ -13,14 +14,14 @@ public class AdventOfCodeEditor extends SingleWindowEditor {
             new CodeDay1()
     };
 
-    private final String[] results;
+    private final Results[] results;
     private final ImBoolean advanced;
     private int selectedIndex;
 
     public AdventOfCodeEditor() {
         this.selectedIndex = 0;
         this.advanced = new ImBoolean();
-        this.results = new String[DAYS.length];
+        this.results = new Results[DAYS.length];
     }
 
     @Override
@@ -31,9 +32,13 @@ public class AdventOfCodeEditor extends SingleWindowEditor {
         if (ImGui.button("Run")) {
             if (selectedDay != null) {
                 try {
-                    this.results[this.selectedIndex] = selectedDay.run(this.advanced.get());
+                    Stopwatch timer = Stopwatch.createStarted();
+                    String data = selectedDay.run(this.advanced.get());
+                    timer.stop();
+                    this.results[this.selectedIndex] = new Results(data, timer);
                 } catch (Exception e) {
                     AdventOfCode23.LOGGER.error("Failed to run {}", selectedDay.getName(), e);
+                    this.results[this.selectedIndex] = null;
                 }
             }
         }
@@ -41,11 +46,14 @@ public class AdventOfCodeEditor extends SingleWindowEditor {
 
         ImGui.sameLine();
         ImGui.checkbox("Advanced", this.advanced);
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip("Whether to run part 2 of AOC");
+        }
 
-        String result = this.getResult();
+        Results result = this.getResult();
         ImGui.separator();
-        ImGui.text("Results:");
-        ImGui.textColored(result != null ? -1 : 0xFF0000FF, result != null ? result : "N/A");
+        ImGui.text(result != null ? "Results (%s):".formatted(result.timer) : "Results:");
+        ImGui.textColored(result != null ? -1 : 0xFF0000FF, result != null ? result.message : "N/A");
 
         if (ImGui.beginTabBar("##days")) {
             for (int i = 0; i < DAYS.length; i++) {
@@ -53,6 +61,9 @@ public class AdventOfCodeEditor extends SingleWindowEditor {
                 if (ImGui.tabItemButton(day.getName()) && selectedDay != day) {
                     this.free();
                     this.selectedIndex = i;
+                }
+                if (ImGui.isItemHovered() && this.results[i] != null) {
+                    ImGui.setTooltip("Took " + this.results[i].timer);
                 }
             }
             ImGui.endTabBar();
@@ -63,7 +74,7 @@ public class AdventOfCodeEditor extends SingleWindowEditor {
         }
     }
 
-    private @Nullable String getResult() {
+    private @Nullable Results getResult() {
         return this.selectedIndex >= 0 && this.selectedIndex < DAYS.length ? this.results[this.selectedIndex] : null;
     }
 
@@ -89,5 +100,8 @@ public class AdventOfCodeEditor extends SingleWindowEditor {
     @Override
     public String getDisplayName() {
         return "Advent of Code 2023";
+    }
+
+    private record Results(@Nullable String message, Stopwatch timer) {
     }
 }
